@@ -3,6 +3,7 @@
 #include "utils.h"
 #include "save.h"
 
+// Menu principal do jogo
 void menu_screen(GameState *gs) {
     printf("\n\nTERMINAL MENU PRINCIPAL\n");
     printf("1 - Novo Jogo\n");
@@ -17,13 +18,14 @@ void menu_screen(GameState *gs) {
             break;
         case 1:
             init_gamestate(gs);
-            clear_save_file();
+            clear_save_file();  // Limpa save anterior
             gs->mode = STATE_DIALOGUE;
             break;
         case 2:
-            if (load_game(gs, "data/save.dat")) {
+            // Tenta carregar save
+            if (game_load(gs, "data/save.dat")) {
                 printf("Save carregado.\n");
-                debug_print(gs);
+                debug_print(gs);  // Mostra info de debug
                 gs->mode = STATE_DIALOGUE;
             } else {
                 printf("Nenhum save encontrado.\n");

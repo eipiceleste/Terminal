@@ -2,78 +2,54 @@
 #include "menu_minigame.h"
 #include "utils.h"
 #include "save.h"
+#include "minigame_cards.h"
+#include "card_ui.h"
 
-void minigame_screen(GameState *gs)
-{
-    printf("\n\n MENU_MINIGAME MINIGAME_SCREEN\n");
-    printf("1 - Voltar para o MENU_DIALOGO\n");
-    printf("2 - DEBUG incrementar clues\n");
-    printf("3 - DEBUG liberar nova clue\n");
-    printf("4 - Salvar e sair\n");
-    printf("ESC - Voltar para o menu principal\n");
-
+// Menu do minigame (antes de começar a jogar)
+void minigame_screen(GameState *gs) {
+    printf("\n=== DESCRIPTOGRAFAR ARQUIVO ===\n");
+    printf("1 - Iniciar descriptografia\n");
+    printf("2 - Ver regras\n");
+    printf("3 - Teste rapido (debug)\n");  // Debug: mostra baralho
+    printf("4 - Voltar ao dialogo\n");
+    printf("ESC - Menu principal\n");
+    
     int opc = answer();
-
-    switch (opc)
-    {
-    case 0:
-        gs->mode = STATE_MENU;
-        break;
-    case 1:
-        gs->mode = STATE_DIALOGUE;
-        break;
-    case 2: // DEBUG adicionar clue
-        gs->player.clues_found++;
-        printf("Clue adicionada. Total: %d\n", gs->player.clues_found);
-        break;
-    case 3:
-    { // DEBUG liberar nova clue
-        FILE *f = fopen("pistas/pista_teste.dat", "w");
-        if (!f)
-        {
-            printf("Erro\n");
+    
+    switch (opc) {
+        case 0:
+            gs->mode = STATE_MENU;
             break;
-        }
-        char *texto = "teste oi isso e uma pista";
-        for (int i = 0; texto[i]; i++)
-        {
-            fputc(texto[i] + 3, f);
-        }
-        fclose(f);
-
-        printf("Nova pista encontrada\n");
-        printf("Digite o Codigo da Pista para liberar no inventario: \n");
-
-        int cod = 0;
-        scanf("%d", &cod);
-
-        if (cod != 1234)
-        {
-            printf("Codigo incorreto.\n");
-        }
-        else
-        {
-            FILE *f2 = fopen("pistas/pista_teste.dat", "r");
-            int c;
-            while ((c = fgetc(f2)) != EOF)
-            {
-                putchar(c - 3);
+        case 1:
+            iniciar_minigame_cartas(gs);  // Chama o minigame
+            break;
+        case 2:
+            display_rules_simple();  // Mostra regras
+            printf("\nPressione Enter para voltar...");
+            while (getchar() != '\n');
+            break;
+        case 3:  // Debug: verifica se baralho tá funcionando
+            printf("\n=== TESTE DEBUG ===\n");
+            if (!gs->minigame_deck) {
+                printf("Criando novo deck...\n");
+                rebuild_deck_from_save(gs);
             }
-            fclose(f2);
-            printf("\nPista liberada no inventario.\n");
-        }
-
-        break;
-    }
-    case 4:
-        if (save_game(gs, "data/save.dat"))
-        {
-            printf("Jogo salvo\n");
-        }
-        gs->mode = STATE_MENU;
-        break;
-    default:
-        printf("Opcao invalida\n");
-        break;
+            
+            if (gs->minigame_deck) {
+                printf("Deck existe! Tamanho: %d\n", deck_size(gs->minigame_deck));
+                deck_display(gs->minigame_deck);  // Mostra cartas
+            } else {
+                printf("ERRO: Deck nao foi criado!\n");
+            }
+            
+            printf("\nPressione Enter para voltar...");
+            while (getchar() != '\n');
+            break;
+        case 4:
+            gs->mode = STATE_DIALOGUE;
+            break;
+        default:
+            printf("Opcao invalida\n");
+            break;
     }
 }
